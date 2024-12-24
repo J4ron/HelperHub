@@ -31,7 +31,7 @@
     protected override async Task OnInitializedAsync()
         {
             var settings = await SettingsService.LoadSettingsAsync();
-            _folderPath = settings.FolderPath ?? @"C:\DefaultPath";
+            _folderPath = settings.FolderPath ?? @"/data";
         }
 
     private async Task SavePathAsync()
