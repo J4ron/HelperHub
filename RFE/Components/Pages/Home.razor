@@ -10,35 +10,9 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-3 border-end border-secondary" style="height: 100vh; overflow-y: auto;">
-            <h5 class="text-white-50">Explorer</h5>
-            <hr />
-            <ul class="list-group">
-                @foreach (var item in RootFolderItems)
-                {
-                    <li class="list-group-item bg-black bg-dark text-white-50 border-0 border-bottom border-secondary" style="cursor: pointer;" @onclick="() => ToggleFolder(item)">
-                        @if (item.IsDirectory)
-                        {
-                            <i class="bi @(item.IsExpanded ? "bi-caret-down-fill" : "bi-caret-right-fill")"></i>
-                            <i style="margin-left: 0.2em; user-select: none" class="bi bi-folder-fill text-warning"></i>
-                            <a class="text-dark text-decoration-none text-white" style="margin-left: 0.5em; user-select: none">@item.Name</a>
-                        }
-                        else
-                        {
-                            <i class="bi bi-file-earmark-text"></i>
-                            <a class="text-dark text-decoration-none text-white" style="margin-left: 0.5em;">@item.Name</a>
-                        }
-                    </li>
-                    @if (item.IsExpanded && item.SubItems.Any())
-                    {
-                        <ul class="list-group ms-3">
-                            @RenderSubFolders(item.SubItems)
-                        </ul>
-                    }
-                }
-            </ul>
-        </div>
-        
+        <!-- Dein Explorer, Buttons etc. -->
+        <!-- ... -->
+
         <div class="col-9 text-white">
             <div class="d-flex justify-content-between align-items-center">
                 <h5>Content</h5>
@@ -46,12 +20,8 @@
                 {
                     <div class="btn-group" role="group" aria-label="Basic example">
                         <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary" @onclick="OpenRawView">Raw</button>
-                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary">
-                            <i class="bi bi-clipboard2"></i>
-                        </button>
-                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary">
-                            <i class="bi bi-file-earmark-arrow-down"></i>
-                        </button>
+                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary"><i class="bi bi-clipboard2"></i></button>
+                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary"><i class="bi bi-file-earmark-arrow-down"></i></button>
                     </div>
                 }
             </div>
@@ -60,16 +30,11 @@
 
             @if (!string.IsNullOrEmpty(CurrentFilePath) && IsImageFile(CurrentFilePath))
             {
-                <!-- Bild mit dynamischer BaseUrl -->
-                <img src="@($"{BaseUrl}/api/Image/GetImage?relativePath={CurrentFilePath}")" 
-                     class="img-fluid" alt="Image" />
+                <img src="@($"{BaseUrl}/api/Image/GetImage?relativePath={CurrentFilePath}")" class="img-fluid" alt="Image" />
             }
             else if (!string.IsNullOrEmpty(CurrentFilePath) && IsMp3File(CurrentFilePath))
             {
-                <!-- Audio mit dynamischer BaseUrl -->
-                <audio controls preload="auto" 
-                       src="@($"{BaseUrl}/api/Audio/GetAudio?relativePath={CurrentFilePath}")">
-                </audio>
+                <audio controls preload="auto" src="@($"{BaseUrl}/api/Audio/GetAudio?relativePath={CurrentFilePath}")"></audio>
             }
             else if (!string.IsNullOrEmpty(FileContent))
             {
@@ -78,9 +43,7 @@
             else
             {
                 <div class="alert alert-dark w-50 lh-1" role="alert">
-                    <i class="bi bi-info-circle">
-                        <p>select a file to view its content.</p>
-                    </i>
+                    <i class="bi bi-info-circle"><p>select a file to view its content.</p></i>
                 </div>
             }
         </div>
@@ -93,13 +56,12 @@
     private string? CurrentFilePath = null;
     private string? FileContent = null;
 
-    // Hier legen wir unsere BaseUrl an, die aus der Umgebungsvariable URL gelesen wird
+    // Das ist die wichtige Variable für deine Docker-Compose-URL
     private string BaseUrl = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        // URL aus der Umgebungsvariable auslesen.
-        // Fällt auf "http://localhost:5051" zurück, wenn nicht gesetzt
+        // Hole die Umgebungsvariable "URL" oder nutze einen Fallback
         BaseUrl = Configuration["URL"] ?? "http://localhost:5051";
 
         var settings = await SettingsService.LoadSettingsAsync();
@@ -128,7 +90,6 @@
                 SubItems = new List<FileSystemItem>()
             }).ToList();
 
-            // Verzeichnisse zuerst, dann Dateien
             RootFolderItems = RootFolderItems.OrderBy(item => item.IsDirectory ? 0 : 1).ToList();
         }
         catch (Exception ex)
@@ -169,7 +130,7 @@
                 SubItems = new List<FileSystemItem>()
             }).ToList();
 
-            folderItem.SubItems = folderItem.SubItems.OrderBy(item => item.IsDirectory ? 0 : 1).ToList();
+            folderItem.SubItems = folderItem.SubItems.OrderBy(x => x.IsDirectory ? 0 : 1).ToList();
         }
         catch (Exception ex)
         {
@@ -201,7 +162,7 @@
     private bool IsImageFile(string filePath)
     {
         var extension = Path.GetExtension(filePath).ToLower();
-        return extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".gif";
+        return extension is ".png" or ".jpg" or ".jpeg" or ".gif";
     }
 
     private bool IsMp3File(string filePath)
@@ -212,16 +173,14 @@
         }
         return Path.GetExtension(filePath)?.ToLower() == ".mp3";
     }
-    
+
     private void OpenRawView()
     {
         if (!string.IsNullOrEmpty(CurrentFilePath))
         {
             try
             {
-                // Raw-URL mit dynamischer BaseUrl
                 var rawUrl = $"{BaseUrl}/api/Raw/GetRawText?relativePath={Uri.EscapeDataString(CurrentFilePath)}";
-                
                 NavigationManager.NavigateTo(rawUrl, forceLoad: true);
             }
             catch (Exception ex)
