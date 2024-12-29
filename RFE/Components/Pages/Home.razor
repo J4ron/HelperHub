@@ -1,10 +1,12 @@
-﻿@page "/"
+@page "/"
 @using System.IO
 @using RFE.Components.Data
 @rendermode InteractiveServer
+
 @inject ISettingsService SettingsService
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
+@inject IConfiguration Configuration
 
 <div class="container">
     <div class="row">
@@ -44,8 +46,12 @@
                 {
                     <div class="btn-group" role="group" aria-label="Basic example">
                         <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary" @onclick="OpenRawView">Raw</button>
-                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary"><i class="bi bi-clipboard2"></i></button>
-                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary">
+                            <i class="bi bi-clipboard2"></i>
+                        </button>
+                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary">
+                            <i class="bi bi-file-earmark-arrow-down"></i>
+                        </button>
                     </div>
                 }
             </div>
@@ -54,11 +60,16 @@
 
             @if (!string.IsNullOrEmpty(CurrentFilePath) && IsImageFile(CurrentFilePath))
             {
-                <img src="http://localhost:5051/api/Image/GetImage?relativePath=@CurrentFilePath" class="img-fluid" alt="Image" />
+                <!-- Bild mit dynamischer BaseUrl -->
+                <img src="@($"{BaseUrl}/api/Image/GetImage?relativePath={CurrentFilePath}")" 
+                     class="img-fluid" alt="Image" />
             }
             else if (!string.IsNullOrEmpty(CurrentFilePath) && IsMp3File(CurrentFilePath))
             {
-                <audio controls preload="auto" src="http://localhost:5051/api/Audio/GetAudio?relativePath=@CurrentFilePath"></audio>
+                <!-- Audio mit dynamischer BaseUrl -->
+                <audio controls preload="auto" 
+                       src="@($"{BaseUrl}/api/Audio/GetAudio?relativePath={CurrentFilePath}")">
+                </audio>
             }
             else if (!string.IsNullOrEmpty(FileContent))
             {
@@ -67,7 +78,9 @@
             else
             {
                 <div class="alert alert-dark w-50 lh-1" role="alert">
-                    <i class="bi bi-info-circle"><p>select a file to view its content.</p></i>
+                    <i class="bi bi-info-circle">
+                        <p>select a file to view its content.</p>
+                    </i>
                 </div>
             }
         </div>
@@ -80,8 +93,15 @@
     private string? CurrentFilePath = null;
     private string? FileContent = null;
 
+    // Hier legen wir unsere BaseUrl an, die aus der Umgebungsvariable URL gelesen wird
+    private string BaseUrl = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
+        // URL aus der Umgebungsvariable auslesen.
+        // Fällt auf "http://localhost:5051" zurück, wenn nicht gesetzt
+        BaseUrl = Configuration["URL"] ?? "http://localhost:5051";
+
         var settings = await SettingsService.LoadSettingsAsync();
         RootPath = settings.FolderPath;
 
@@ -108,6 +128,7 @@
                 SubItems = new List<FileSystemItem>()
             }).ToList();
 
+            // Verzeichnisse zuerst, dann Dateien
             RootFolderItems = RootFolderItems.OrderBy(item => item.IsDirectory ? 0 : 1).ToList();
         }
         catch (Exception ex)
@@ -198,7 +219,8 @@
         {
             try
             {
-                var rawUrl = $"http://localhost:5051/api/Raw/GetRawText?relativePath={Uri.EscapeDataString(CurrentFilePath)}";
+                // Raw-URL mit dynamischer BaseUrl
+                var rawUrl = $"{BaseUrl}/api/Raw/GetRawText?relativePath={Uri.EscapeDataString(CurrentFilePath)}";
                 
                 NavigationManager.NavigateTo(rawUrl, forceLoad: true);
             }
