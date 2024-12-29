@@ -15,8 +15,6 @@ builder.WebHost.UseUrls("http://0.0.0.0:5000");
 builder.Services.AddSingleton<ISettingsService, SettingsService>();
 builder.Services.AddSingleton<IFileService, FileService>();
 
-
-builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.AddHttpClient();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
