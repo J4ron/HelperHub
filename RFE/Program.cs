@@ -3,12 +3,6 @@ using RFE.Components.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Bind environment variables to configuration
-builder.Configuration.AddEnvironmentVariables();
-builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
-
-
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 // Add services to the container
