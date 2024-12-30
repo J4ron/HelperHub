@@ -54,11 +54,11 @@
 
             @if (!string.IsNullOrEmpty(CurrentFilePath) && IsImageFile(CurrentFilePath))
             {
-                <img src="http://localhost:5051/api/Image/GetImage?relativePath=@CurrentFilePath" class="img-fluid" alt="Image" />
+                <img src="https://raw.skwptic-systems.de/api/Image/GetImage?relativePath=@CurrentFilePath" class="img-fluid" alt="Image" />
             }
             else if (!string.IsNullOrEmpty(CurrentFilePath) && IsMp3File(CurrentFilePath))
             {
-                <audio controls preload="auto" src="http://localhost:5051/api/Audio/GetAudio?relativePath=@CurrentFilePath"></audio>
+                <audio controls preload="auto" src="https://raw.skeptic-systems.de/api/Audio/GetAudio?relativePath=@CurrentFilePath"></audio>
             }
             else if (!string.IsNullOrEmpty(FileContent))
             {
@@ -198,7 +198,7 @@
         {
             try
             {
-                var rawUrl = $"http://localhost:5051/api/Raw/GetRawText?relativePath={Uri.EscapeDataString(CurrentFilePath)}";
+                var rawUrl = $"http://raw.skeptic-systems.de/api/Raw/GetRawText?relativePath={Uri.EscapeDataString(CurrentFilePath)}";
                 
                 NavigationManager.NavigateTo(rawUrl, forceLoad: true);
             }
