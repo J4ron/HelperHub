@@ -1,14 +1,42 @@
+@page "/"
 @using System.IO
 @using RFE.Components.Data
 @rendermode InteractiveServer
-
 @inject ISettingsService SettingsService
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
 
 <div class="container">
     <div class="row">
-
+        <div class="col-3 border-end border-secondary" style="height: 100vh; overflow-y: auto;">
+            <h5 class="text-white-50">Explorer</h5>
+            <hr />
+            <ul class="list-group">
+                @foreach (var item in RootFolderItems)
+                {
+                    <li class="list-group-item bg-black bg-dark text-white-50 border-0 border-bottom border-secondary" style="cursor: pointer;" @onclick="() => ToggleFolder(item)">
+                        @if (item.IsDirectory)
+                        {
+                            <i class="bi @(item.IsExpanded ? "bi-caret-down-fill" : "bi-caret-right-fill")"></i>
+                            <i style="margin-left: 0.2em; user-select: none" class="bi bi-folder-fill text-warning"></i>
+                            <a class="text-dark text-decoration-none text-white" style="margin-left: 0.5em; user-select: none">@item.Name</a>
+                        }
+                        else
+                        {
+                            <i class="bi bi-file-earmark-text"></i>
+                            <a class="text-dark text-decoration-none text-white" style="margin-left: 0.5em;">@item.Name</a>
+                        }
+                    </li>
+                    @if (item.IsExpanded && item.SubItems.Any())
+                    {
+                        <ul class="list-group ms-3">
+                            @RenderSubFolders(item.SubItems)
+                        </ul>
+                    }
+                }
+            </ul>
+        </div>
+        
         <div class="col-9 text-white">
             <div class="d-flex justify-content-between align-items-center">
                 <h5>Content</h5>
@@ -16,6 +44,8 @@
                 {
                     <div class="btn-group" role="group" aria-label="Basic example">
                         <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary" @onclick="OpenRawView">Raw</button>
+                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary"><i class="bi bi-clipboard2"></i></button>
+                        <button type="button" class="text-white-50 btn btn-outline-dark btn-secondary"><i class="bi bi-file-earmark-arrow-down"></i></button>
                     </div>
                 }
             </div>
@@ -24,11 +54,11 @@
 
             @if (!string.IsNullOrEmpty(CurrentFilePath) && IsImageFile(CurrentFilePath))
             {
-                <img src="@($"{BaseUrl}/api/Image/GetImage?relativePath={CurrentFilePath}")" class="img-fluid" alt="Image" />
+                <img src="http://localhost:5051/api/Image/GetImage?relativePath=@CurrentFilePath" class="img-fluid" alt="Image" />
             }
             else if (!string.IsNullOrEmpty(CurrentFilePath) && IsMp3File(CurrentFilePath))
             {
-                <audio controls preload="auto" src="@($"{BaseUrl}/api/Audio/GetAudio?relativePath={CurrentFilePath}")"></audio>
+                <audio controls preload="auto" src="http://localhost:5051/api/Audio/GetAudio?relativePath=@CurrentFilePath"></audio>
             }
             else if (!string.IsNullOrEmpty(FileContent))
             {
@@ -50,14 +80,8 @@
     private string? CurrentFilePath = null;
     private string? FileContent = null;
 
-    // Das ist die wichtige Variable für deine Docker-Compose-URL
-    private string BaseUrl = string.Empty;
-
     protected override async Task OnInitializedAsync()
     {
-        // Hole die Umgebungsvariable "URL" oder nutze einen Fallback
-        BaseUrl = Configuration["URL"] ?? "http://localhost:5051";
-
         var settings = await SettingsService.LoadSettingsAsync();
         RootPath = settings.FolderPath;
 
@@ -124,7 +148,7 @@
                 SubItems = new List<FileSystemItem>()
             }).ToList();
 
-            folderItem.SubItems = folderItem.SubItems.OrderBy(x => x.IsDirectory ? 0 : 1).ToList();
+            folderItem.SubItems = folderItem.SubItems.OrderBy(item => item.IsDirectory ? 0 : 1).ToList();
         }
         catch (Exception ex)
         {
@@ -156,7 +180,7 @@
     private bool IsImageFile(string filePath)
     {
         var extension = Path.GetExtension(filePath).ToLower();
-        return extension is ".png" or ".jpg" or ".jpeg" or ".gif";
+        return extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".gif";
     }
 
     private bool IsMp3File(string filePath)
@@ -167,14 +191,15 @@
         }
         return Path.GetExtension(filePath)?.ToLower() == ".mp3";
     }
-
+    
     private void OpenRawView()
     {
         if (!string.IsNullOrEmpty(CurrentFilePath))
         {
             try
             {
-                var rawUrl = $"{BaseUrl}/api/Raw/GetRawText?relativePath={Uri.EscapeDataString(CurrentFilePath)}";
+                var rawUrl = $"http://localhost:5051/api/Raw/GetRawText?relativePath={Uri.EscapeDataString(CurrentFilePath)}";
+                
                 NavigationManager.NavigateTo(rawUrl, forceLoad: true);
             }
             catch (Exception ex)
