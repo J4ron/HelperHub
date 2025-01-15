@@ -15,3 +15,6 @@ COPY --from=build /app/publish .
 RUN mkdir /data
 EXPOSE 5000
 ENTRYPOINT ["dotnet", "RFE.dll"]
+
+# docker build -t helper-hub .
+# docker run -d -p 5000:5000 helper-hub

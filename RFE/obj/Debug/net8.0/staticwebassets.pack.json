@@ -25,10 +25,6 @@
       "PackagePath": "staticwebassets\\favicon.png"
     },
     {
-      "Id": "C:\\Users\\Jaron\\RiderProjects\\Skeptic - Raw File explorer\\RFE\\wwwroot\\js\\clipboard.js",
-      "PackagePath": "staticwebassets\\js\\clipboard.js"
-    },
-    {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.RFE.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },

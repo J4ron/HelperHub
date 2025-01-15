@@ -1,11 +1,31 @@
 services:
   helperhub:
-    image: skepticsystems/helper-hub:0.0.1
+    image: skepticsystems/helper-hub:0.0.6
     restart: unless-stopped
     container_name: helperhub
     ports:
       - "5000:5000"
     volumes:
-      - ./data:/data
+      - /var/docker/helperhub/data:/data
+  helperhubapi:
+    image: skepticsystems/helper-hub-api:0.0.1
+    restart: unless-stopped
+    container_name: helperhubapi
+    ports:
+      - "5010:5010"
+    volumes:
+      - /var/docker/helperhub/data:/data
 
-# Data Path is the path where your files can be stored
+      
+  # Optional! SMVB
+  helperhubsmb:
+    restart: unless-stopped
+    image: 'dockurr/samba'
+    container_name: helperhubsmb
+    environment:
+      USER: "User"
+      PASS: "Pass"
+    ports:
+      - 445:445
+    volumes:
+      - /var/docker/helperhub/data:/storage
